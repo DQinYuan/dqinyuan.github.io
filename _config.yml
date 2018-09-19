@@ -1,7 +1,7 @@
 # Site settings 配置站点
 title: "DQinYuan's Blog"
 description: 'Java码农，热衷与分享技术，主要研究JVM上的相关技术，别的也偶然看看，但是比较菜'
-keyword: '杜沁园, 杜沁园的独立博客, 廖柯宇的博客, Java, 后端开发, 后端博客'
+keyword: '杜沁园, 杜沁园的独立博客, 杜沁园的博客, Java, 后端开发, 后端博客'
 url: '' # your host
 
 # if you don't need baseurl, you should leave this value blank.
