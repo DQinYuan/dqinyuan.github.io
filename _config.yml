@@ -12,6 +12,7 @@ nav:
   主页: '/'
   标签: '/tags.html'
   留言: '/comments.html'
+  友情链接: '/friends.html'
 
 # Footer
 footer:
