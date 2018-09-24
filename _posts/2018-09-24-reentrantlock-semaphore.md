@@ -7,10 +7,11 @@ tags: 并发 java
 ---
 
 # 引言
+---
 Reentrantlock和Semaphore分别是AQS在独占模式和共享模式下经典的实现，在理解AQS的情况下看这两个类的代码会感到非常简单，如果还没理解AQS的话，建议先读我这个系列的[第一篇文章](http://www.dqyuan.top/2018/09/06/abstractqueuesynchronizer.html)
 
 # 复习AQS
-
+---
 回忆一下AQS，AQS中维护了一个state同步状态，它的子类只需要实现以下几个方法，并在方法中修改判断state的值即可：
 
 **独占模式**的同步器（比如Reentrantlock）需要实现：
@@ -34,8 +35,7 @@ Reentrantlock和Semaphore分别是AQS在独占模式和共享模式下经典的�
 
 
 # Reentrantlock
-
-
+---
 
 打开ReentrantLock最常用的三个方法看看（分别是lock,unlock和newCondition），果然全部委托给了叫做sync的内部类对象：
 
@@ -276,7 +276,7 @@ FairSync的lock方法的实现：
 
 
 # Semaphore
-
+---
 Semaphore用来在并发下管理数量有限的资源，是典型的共享模式下的AQS的实现。
 
 和ReentrantLock一样，也分为公平模式和非公平模式。
