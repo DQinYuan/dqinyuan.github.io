@@ -3,7 +3,7 @@ layout: post
 title: 图解java.util.concurrent源码（一）AbstractQueuedSynchronizer（AQS）
 date: 2018-09-06
 categories: java
-cover:https://upload-images.jianshu.io/upload_images/10192684-39bbdb7cede64b0a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240
+cover: https://upload-images.jianshu.io/upload_images/10192684-39bbdb7cede64b0a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240
 tags: java 并发
 ---
 
