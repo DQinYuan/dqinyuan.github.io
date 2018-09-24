@@ -3,6 +3,7 @@ layout: post
 title: 图解java.util.concurrent源码（三） Reentrantlock && Semaphore
 date: 2018-09-24
 categories: java
+cover: /assets/img/lock.jpg
 tags: 并发 java
 ---
 
