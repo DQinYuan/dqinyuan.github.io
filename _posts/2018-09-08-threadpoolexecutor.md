@@ -4,6 +4,7 @@ title: 图解java.util.concurrent源码（二）ThreadPoolExecutor
 date: 2018-09-08
 categories: java
 tags: java 并发
+cover:https://upload-images.jianshu.io/upload_images/10192684-a9a563efe101cb1e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240
 ---
 
 # JDK版本
