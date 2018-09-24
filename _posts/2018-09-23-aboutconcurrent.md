@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 提升程序性能（tps/qps）的几个技巧总结
+title: 提升并发程序性能（tps/qps）的几个技巧总结
 date: 2018-09-23
 categories: java
 tags: 并发
