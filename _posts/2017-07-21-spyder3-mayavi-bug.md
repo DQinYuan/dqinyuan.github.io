@@ -1,7 +1,7 @@
 ---
 layout: post
 title: spyder3(anaconda3)环境下无法使用mayavi库的解决方案
-date: 2018-01-21
+date: 2017-07-21
 categories: python
 tags: python spyder mayavi
 ---
