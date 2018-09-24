@@ -3,6 +3,7 @@ layout: post
 title: 探索HyperLogLog算法（含Java实现）
 date: 2018-08-22
 categories: 原理探究
+cover: https://upload-images.jianshu.io/upload_images/10192684-9f3bbe9d8e36b991.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240
 tags: hyperloglog java 大数据 stream-lib
 ---
 
