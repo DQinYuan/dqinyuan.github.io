@@ -164,7 +164,11 @@ CLH锁在大多数情况下表现都很优异，书中只给了一处例外，�
 # AQS原理概览
 ---
 在真正开始阅读源码之前，我先用简要地说明一下AQS的原理。
-AQS维护着两个队列，一个是由AQS类维护的CLH队列（用于运行CLH算法），另一个主要由AQS的内部类ConditionObject维护（用于支持线程间的同步，提供await,signal,signalAll方法）。
+AQS维护着两个队列，一个是由AQS类维护的CLH队列（用于运行CLH算法），另一个是由AQS的内部类ConditionObject维护的Condition队列（用于支持线程间的同步，提供await,signal,signalAll方法）。
+
+AQS中维护的CLH队列看起来大概像这样：
+![AQS中的CLH队列](https://upload-images.jianshu.io/upload_images/10192684-998aa2b8c1e7801f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 具体运作看接下来的源码详解。
 
 # AQS源码图解
