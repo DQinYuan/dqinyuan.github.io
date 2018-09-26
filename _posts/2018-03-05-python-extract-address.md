@@ -6,9 +6,8 @@ categories: python
 tags: python 我的开源库
 ---
 
-# 引言
+#  引言
 ---
-
 在一次建模比赛中，我手头里的原始数据中有一个“地址描述”地段，如下：
 
 | 地址描述        | 
@@ -30,7 +29,6 @@ tags: python 我的开源库
 
 # 模块安装
 ---
-
 目前支持python3
 
 ```c-like
@@ -42,23 +40,36 @@ pip install cpca
 更详细的模块介绍见Github上的README
 [https://github.com/DQinYuan/chinese_province_city_area_mapper](https://github.com/DQinYuan/chinese_province_city_area_mapper)
 
+如果觉得这个模块对你有帮助的话，请给个star啊
+
 # 基本功能
 ---
+## 分词模式
 本模块中最主要的方法是cpca.transform，该方法可以输入任意的可迭代类型（如list，pandas的Series类型等），然后将其转换为一个DataFrame，下面演示一个最为简单的使用方法：
+
 ```python
-    location_str = ["徐汇区虹漕路461号58号楼5楼", "泉州市洛江区万安塘西工业区", "朝阳区北苑华贸城"]
-    from cpca import *
-    df = transform(location_str)
-    df
+location_str = ["徐汇区虹漕路461号58号楼5楼", "泉州市洛江区万安塘西工业区", "朝阳区北苑华贸城"]
+from cpca import *
+df = transform(location_str)
+df
 ```
 
+
 输出的结果为：
+
 ```c-like
-         区     市      省         地址
+         区    市      省      地址
     0  徐汇区  上海市  上海市   虹漕路461号58号楼5楼
     1  洛江区  泉州市  福建省   万安塘西工业区
     2  朝阳区  北京市  北京市   北苑华贸城
 ```
+
+> 注：程序输出的df是一个Pandas的DataFrame类型变量，DataFrame可以非常轻易地转化为csv或者excel文件，如果你对DataFrame不熟悉的话，可以参考Pandas的官方文档：http://pandas.pydata.org/pandas-docs/version/0.20/dsintro.html#dataframe
+>
+> ，或者往下翻到"示例与测试用例"大标题，那里我也展示了DataFrame的拼接与转换成csv文件的操作。
+
+默认情况下transform方法的cut参数为True，即采用分词匹配的方式，这种方式速度比较快，但是准确率可能会比较低，如果追求准确率而不追求速度的话，建议将cut设为False（全文模式），具体见下一小节。
+
 尝试着对代码稍加修改（其实就是将transform方法的umap参数置为空字典）：
 
 ```python
@@ -95,21 +106,24 @@ myumap = {'南关区': '长春市',
 你会发现，其中指定了将”朝阳区“映射到北京市，因为笔者在测试数据中发现，数据中的”朝阳区“基本上都是指北京市那个”朝阳区“（原因可能是北京市的”朝阳区“的经济以及知名度要远比长春市的那个”朝阳区“发达）。当然，默认的这个umap并没有囊括中国所有的重名区，因为有的时候，两个重名区在数据中都经常被提及，无法强制指定将某个区映射成固定的市，比如福州市的“鼓楼区”与南京市的“鼓楼区”，都是经常被提及的地名。
 
 看看下面一个例子：
+
 ```python
-    location_str = ["福建省鼓楼区软件大道89号"]
-    from cpca import *
-    df = transform(location_str)
-    df
+location_str = ["福建省鼓楼区软件大道89号"]
+from cpca import *
+df = transform(location_str)
+df
 ```
+
 输出结果为：
+
 ```c-like
      区     市    省       地址
 0  鼓楼区         福建省   软件大道89号
 ```
 
-并且还会产生一个警告信息：
+可以看到，市没有被成功提取出来，并且还会产生一个警告信息：
 
-```
+```c-like
 WARNING:root:建议添加到umap中的区有：{'鼓楼区'},有多个市含有相同名称的区
 ```
 
@@ -132,6 +146,72 @@ df
 ```
 
 好在中国只有在三级行政区存在重名问题，二级与一级行政区的名称都是唯一的。
+
+有的时候为了方便concat，想要自定义输出表的index，可以选择使用transform函数的index参数(这个参数只要保证长度和data相同即可，可以是list或者pandas中相关的类型)，示例如下：
+
+```python
+location_str = ["徐汇区虹漕路461号58号楼5楼", "泉州市洛江区万安塘西工业区", "朝阳区北苑华贸城"]
+from cpca import *
+df = transform(location_str, index=["2018年","2017年","2016年"])
+df
+```
+
+输出结果：
+
+```c-like
+         区     市     省             地址
+2018年  徐汇区  上海市  上海市      虹漕路461号58号楼5楼
+2017年  洛江区  泉州市  福建省      万安塘西工业区
+2016年  朝阳区  北京市  北京市      北苑华贸城
+```
+
+
+## 全文模式
+
+jieba分词并不能百分之百保证分词的正确性，在分词错误的情况下会造成奇怪的结果，比如下面：
+
+```python
+location_str = ["浙江省杭州市下城区青云街40号3楼","广东省东莞市莞城区东莞大道海雅百货"]
+from cpca import *
+df = transform(location_str)
+df
+```
+
+输出的结果为：
+
+```c-like
+    区    市    省            地址
+0 城区  东莞市  广东省  莞大道海雅百货自然堂专柜
+1 城区  杭州市  浙江省  下青云街40号3楼
+```
+
+这种诡异的结果是因为jieba本身就将词给分错了，所以我们引入了全文模式，不进行分词，直接全文匹配，使用方法如下:
+
+```python
+location_str = ["浙江省杭州市下城区青云街40号3楼","广东省东莞市莞城区东莞大道海雅百货"]
+from cpca import *
+df = transform(location_str, cut=False)
+df
+```
+
+结果如下：
+
+```c-like
+     区    市    省        地址
+0   下城区  杭州市  浙江省  青云街40号3楼
+1   莞城区  东莞市  广东省    大道海雅百货
+```
+
+这下就完全正确了，不过全文匹配模式会造成匹配效率低下，我默认会向前看8个字符(对应transform中的lookahead参数默认值为8)，这个是比较保守的，因为有的地名会比较长（比如“新疆维吾尔族自治区”），如果你的地址库中都是些短小的省市区名的话，可以选择将lookahead设置得小一点，比如：
+
+```python
+location_str = ["浙江省杭州市下城区青云街40号3楼","广东省东莞市莞城区东莞大道海雅百货"]
+from cpca import *
+df = transform(location_str, cut=False, lookahead=3)
+df
+```
+
+输出结果和之前是一样的。
 
 # 地图绘制
 ---
