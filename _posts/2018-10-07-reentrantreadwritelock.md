@@ -4,7 +4,7 @@ title: 图解java.util.concurrent源码（四） 可重入读写锁（ReentrantR
 date: 2018-10-07
 categories: java
 tags: java 并发
-cover: https://upload-images.jianshu.io/upload_images/10192684-2036bff482685f3f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240
+cover: https://upload-images.jianshu.io/upload_images/10192684-01200a0a8597faac.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240
 ---
 
 # 引言
@@ -40,7 +40,7 @@ ReentrantReadWriteLock的一个重要特性是锁降级。
 
 锁降级的含义如下：
 
-![锁降级](https://upload-images.jianshu.io/upload_images/10192684-2036bff482685f3f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![锁降级](https://upload-images.jianshu.io/upload_images/10192684-01200a0a8597faac.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 按照如上的顺序编写代码即可将线程持有的写锁降级为读锁。
 
