@@ -726,3 +726,10 @@ transferForSignal的最后几句干的就是这件事情：
             } while (first != null);
 ```
 也就是说它会遍历完Condition队列将他们全部加入CLH队列。
+
+# 参考文献
+---
+
+《The Art of Multiprocessor Programming》
+
+[https://www.e-reading.club/bookreader.php/134637/Herlihy,_Shavit_-_The_art_of_multiprocessor_programming.pdf](https://www.e-reading.club/bookreader.php/134637/Herlihy,_Shavit_-_The_art_of_multiprocessor_programming.pdf)
