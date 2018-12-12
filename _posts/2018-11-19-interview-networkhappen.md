@@ -3,7 +3,7 @@ layout: post
 title: 大厂常见变态面试题解析（网络方向）（一）从网址输入浏览器到网页呈现在屏幕上的过程
 date: 2018-11-19
 categories: java
-tags: java 并发
+tags: 网络 面试
 cover: 
 ---
 
