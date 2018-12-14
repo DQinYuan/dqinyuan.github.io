@@ -48,6 +48,7 @@ CPU的缓存都是以缓存行（通常为64B）为单位的，即使互相之�
 
 - netty中可以使用Recycler来实现对象池
 - Disruptor中的RingBuffer就是由可重用的对象组成，GC友好
+- 利用apache common pool重用对象
 
 
 
