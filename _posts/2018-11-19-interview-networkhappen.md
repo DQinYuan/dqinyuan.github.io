@@ -108,7 +108,7 @@ DNS映射只能将一个域名映射成一个IP，但是现在的系统处于性
 
 有很多抓取Http报文的工具，比如Chrome浏览器自带的开发者工具，Fiddler等，我用Fiddler随意抓取了一个HTTP报文如下：
 
-```
+```c-like
 GET http://pos.baidu.com/qctm?conwid=172&conhei=425 HTTP/1.1
 Host: pos.baidu.com
 Connection: keep-alive
@@ -154,7 +154,7 @@ GET方法和POST方法外加携带一些参数理论上已经可以满足全部�
 
 后端程序处理完后会返回给客户端一个HTTP响应，HTTP响应的格式与HTTP请求的格式类似：
 
-```
+```c-like
 HTTP/1.1 200 OK
 Cache-Control: private, no-store, no-cache, must-revalidate, post-check=0,
     pre-check=0
@@ -204,17 +204,19 @@ Date: Fri, 12 Feb 2010 09:05:55 GMT
 浏览器通过上面的请求拿到html后就开始进行渲染，浏览器会先渲染出一个大概的结构出来，因为现在前端各项技术的分工非常明确，通过html浏览器只能知道结构，然后去请求嵌入在html中的实体，比如图片，css和js，通过css浏览器就知道了网站的样式，通过js浏览器就知道了网站的行为
 
  - 图片: img标签
+
 ```html
 <img src="https://xxxxxx/xxxx.png"/>
 ```
  - css样式表，用于决定网站的样式
+
 ```html
 <link href="https://xxxxx/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
 ```
 
  - js, 即JavaScript，用于决定网站的行为  
 
-```
+```html
  <script src="http://xxxxxxx/jquery/2.1.4/jquery.min.js"></script>
 ```
 
