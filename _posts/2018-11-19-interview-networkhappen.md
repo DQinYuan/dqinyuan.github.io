@@ -4,7 +4,7 @@ title: 大厂常见变态面试题解析（网络方向）（一）从网址输�
 date: 2018-12-14
 categories: 面试笔记
 tags: 网络 面试
-cover: 
+cover: https://upload-images.jianshu.io/upload_images/10192684-ee31c3a4c2803245.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240
 ---
 
 
