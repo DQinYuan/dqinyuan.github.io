@@ -99,3 +99,11 @@ CPU的缓存都是以缓存行（通常为64B）为单位的，即使互相之�
 案例：
 
 - LevelDB中当MemTable达到一定大小后不会直接将其落盘，而是而是先将其转换成不变的ImmutableMemTable，之后另一个线程将ImmutableMemTable落盘，写线程则在新建立的MemTable中写数据。这种将内存数据拆成MemTable和ImmutableMemTable的做法巧妙的避开了生成者与消费者之间的同步操作，方便了实现也提高了性能
+
+
+
+### 10、线程亲和性
+
+
+
+线程亲和性技术能够让开发人员将某个重要的线程直接绑定到某个CPU上面，保证这个重要的线程始终拥有CPU资源，不会因为时间片耗尽而被换出去。Java中有封装好的线程亲和性实现：https://github.com/OpenHFT/Java-Thread-Affinity
