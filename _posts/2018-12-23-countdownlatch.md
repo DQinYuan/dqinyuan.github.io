@@ -4,7 +4,7 @@ title: 图解java.util.concurrent源码（五） CountDownLatch
 date: 2018-12-23
 categories: java
 tags: java 并发
-cover: /assets/img/countDown.gif
+cover: /assets/img/latch.jpg
 ---
 
 # 引言
