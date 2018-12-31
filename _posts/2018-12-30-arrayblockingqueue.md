@@ -226,6 +226,43 @@ public class SimpleRoundQueue<T> {
 
 `add`方法就不说了，因为它其实调用的就是offer方法，offer方法返回false就抛异常。
 
+再提一下带有时间限制的`offer`方法的实现：
+
+```java
+    public boolean offer(E e, long timeout, TimeUnit unit)
+        throws InterruptedException {
+
+        checkNotNull(e);
+        long nanos = unit.toNanos(timeout);
+        final ReentrantLock lock = this.lock;
+        lock.lockInterruptibly();
+        try {
+            //ReentrantLock文档中推荐的awaitNanos的标准使用方法
+            while (count == items.length) {
+                if (nanos <= 0)
+                    return false;
+                nanos = notFull.awaitNanos(nanos);
+            }
+            insert(e);
+            return true;
+        } finally {
+            lock.unlock();
+        }
+    }
+```
+
+其实和不带时间限制的offer方法大同小异，只不过这里阻塞用的方法是`awaitNanos`，这里之所以要使用一个while循环直到`nanos`减至0，是因为`awaitNanos`存在“伪唤醒”的问题，可能会在规定的等待时间还没到的时候（for no reason）就返回，返回值是剩余的等待时间，如果你一定想要线程等待这么久的时间的话，`ReentrantLock`文档中推荐的写法是：
+
+```java
+            while (count == items.length) {
+                if (nanos <= 0)
+                    return false;
+                nanos = condition.awaitNanos(nanos);
+            }
+```
+
+在我之前一篇分享`CyclicBarrier`源码的[文章](https://www.dqyuan.top/2018/12/25/cyclicbarrier.html)中也提到了这个"伪唤醒"问题。
+
 ### 出队实现
 
 `poll`方法：
@@ -283,6 +320,10 @@ public class SimpleRoundQueue<T> {
 ---
 
 `ArrayBlockingQueue`的实现非常简单，但是却涉及到“循环队列”以及“生产者消费者”问题两个基础知识点，有的时候面试官会让你手写，所以个类的代码最好能够记住，之前我只顾着研究juc中比较复杂的类了，结果面试官让写这个简单的类，反而没写出来，很尴尬。
+
+另外，`ArrayBlockingQueue`也是学习`ReentrantLock`使用方法的好材料。
+
+
 
 
 
