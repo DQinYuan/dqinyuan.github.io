@@ -116,6 +116,8 @@ LinkedBlockingQueue相比ArrayBlockingQueue最大的特色在与它有两把锁�
 
 ![入队流程](https://upload-images.jianshu.io/upload_images/10192684-d3a27309ce18dfa5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
+图片可能有点小，[点击查看原图](https://upload-images.jianshu.io/upload_images/10192684-d3a27309ce18dfa5.png)
+
 流程图中的步骤我都在下面的代码注释中标注出（一对应①，二对应②，以此类推）：
 
 ```java
