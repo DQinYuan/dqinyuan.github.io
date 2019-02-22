@@ -14,11 +14,13 @@ tags: java 并发
 # JDK版本
 ---
 我这里依据的JDK版本如下：
+
 ```
 java version "1.8.0_73"
 Java(TM) SE Runtime Environment (build 1.8.0_73-b02)
 Java HotSpot(TM) 64-Bit Server VM (build 25.73-b02, mixed mode)
 ```
+
 如果你的版本和我不同，看到的源码可能有细微的不同。
 
 # 什么是AbstractQueuedSynchronizer
@@ -178,8 +180,10 @@ AQS中维护的CLH队列看起来大概像这样：
 ---
 有了CLH锁相关的知识后，就可以来看一看AQS到底是怎么应用这一优秀的锁算法的了。
 ## Node内部类
+
 前面说过，CLH锁是基于队列的，队列中每个节点对应着一个等待资源的线程，在AQS中这个节点对用这一个叫做Node的内部类来表示，我列举一下它比较中要的几个字段：
  - waitStatus: 等待状态，有以下几种取值
+ 
 ```java
 //代表线程已经被取消
 static final int CANCELLED = 1;
@@ -193,6 +197,7 @@ static final int CONDITION = -2;
 //代表后续结点会传播唤醒的操作，共享模式下起作用
 static final int PROPAGATE = -3;
 ```
+
  - prev: CLH队列的前继
  - next: CLH队列的后继
  - nextWaiter: Condition队列的后继
