@@ -623,10 +623,12 @@ await方法的主体逻辑如下：
 ```
 含义非常显而易见。
 为什么要做这两种不同的中断处理呢？我觉得是为了方便上层应用区分：线程从await方法中苏醒究竟是因为中断（THROW_IE）还是因为被其他线程signal（REINTERRUPT）。
+
 | 标记    | 行为   |含义|  
 | --------   | :-----   | :-----   | 
 | THROW_IE       | await方法的最后抛出InterruptedException异常      |  线程苏醒是由中断引起的 |
 | REINTERRUPT| await方法的最后重置中断标志位   | 线程苏醒是由其他线程调用signal方法引起的|  
+
 再回到checkInterruptWhileWaiting方法，这个方法中处理判断要怎么处理中断以外，transferAfterCancelledWait调用还干了其他事情，代码如下：
 ```java
     final boolean transferAfterCancelledWait(Node node) {
