@@ -7,13 +7,14 @@ cover: https://upload-images.jianshu.io/upload_images/10192684-39bbdb7cede64b0a.
 tags: java 并发
 ---
 
+
 # 引言
 ---
 这个系列文章打算用图解的方式记录了自己阅读concurrent包的中一些类的大概流程，加深印象。
 # JDK版本
 ---
 我这里依据的JDK版本如下：
-```c-like
+```
 java version "1.8.0_73"
 Java(TM) SE Runtime Environment (build 1.8.0_73-b02)
 Java HotSpot(TM) 64-Bit Server VM (build 25.73-b02, mixed mode)
@@ -109,7 +110,7 @@ public class SimpleLock extends AbstractQueuedSynchronizer {
 # CLH锁
 ---
 AQS的原理是CLH锁的一个变种，具体怎么变种的后文再说，这里先说一下什么是CLH锁。
-讲之前先推荐一本书--《The Art of Multiprocessor Programming
+讲之前先推荐一本书--《The Art of Multiprocessor Programming
 》，这本书对并发的概念和各种锁的设计思想介绍得特别清楚，目前没发现中文版，文末的参考文献我附了一个英文版的下载链接。书的7.5.2节介绍了CLH锁的设计思想，我这里就从书中摘抄一下只言片语简要介绍。
  CLH锁其实是自旋锁的一种改良，与一般的自旋锁不同，一般的自旋锁会将并发所有的竞争集中在一个标志位里，而CLH锁将竞争资源的线程排成一个队列，每个线程只在前一个线程的标志位上进行自旋，当头节点释放锁时，将自己的标志位置为false，这样后继线程在自旋时发现标志位变为false后，便能获得锁进入临界区。
 CLH队列大概看起来像下面这样：
@@ -165,6 +166,7 @@ CLH锁在大多数情况下表现都很优异，书中只给了一处例外，�
 # AQS原理概览
 ---
 在真正开始阅读源码之前，我先用简要地说明一下AQS的原理。
+
 AQS维护着两个队列，一个是由AQS类维护的CLH队列（用于运行CLH算法），另一个是由AQS的内部类ConditionObject维护的Condition队列（用于支持线程间的同步，提供await,signal,signalAll方法）。
 
 AQS中维护的CLH队列看起来大概像这样：
@@ -178,7 +180,6 @@ AQS中维护的CLH队列看起来大概像这样：
 ## Node内部类
 前面说过，CLH锁是基于队列的，队列中每个节点对应着一个等待资源的线程，在AQS中这个节点对用这一个叫做Node的内部类来表示，我列举一下它比较中要的几个字段：
  - waitStatus: 等待状态，有以下几种取值
-
 ```java
 //代表线程已经被取消
 static final int CANCELLED = 1;
@@ -192,11 +193,10 @@ static final int CONDITION = -2;
 //代表后续结点会传播唤醒的操作，共享模式下起作用
 static final int PROPAGATE = -3;
 ```
-
  - prev: CLH队列的前继
  - next: CLH队列的后继
  - nextWaiter: Condition队列的后继
- - thread: 这个节点所代表的线程
+- thread: 这个节点所代表的线程
 
 从这几个字段可以看出，AQS中维护着两个队列（两个队列都是由Node组成），一个队列就是CLH锁算法中的那个队列（我将其称之为CLH队列），另一个是Condition队列（下文再讲Condition队列是用来做什么的）。
 
@@ -364,6 +364,7 @@ unparkSuccessor方法会将h节点的后继唤醒，点开这个方法会发现�
     }
 ```
 可以看出这里也是依靠LockSupport来唤醒线程的。
+
 后继线程被唤醒之后就会从前面我画的acquire方法的流程图中的节点⑦开始不断地尝试获得锁，直到成功。
 
 ### AQS中对CLH算法的实现与标准的CLH算法有什么异同？
@@ -482,7 +483,9 @@ doReleaseShared的代码如下：
         }
 ```
 这里出现了ConditionObject，Sync继承了AQS，这里的ConditionObject就是AQS中的内部类ConditionObject，这个类几乎不需要经过任何修改就可以直接用来同步，感觉很神奇。
+
 其实ConditionObject内部又维护了一个队列，我称之为Condition队列，这个队列同样是由Node类的实例组成。
+
 我们来看一下它的三个重要方法，分别是：
  - await
  - signal
@@ -615,12 +618,10 @@ await方法的主体逻辑如下：
 ```
 含义非常显而易见。
 为什么要做这两种不同的中断处理呢？我觉得是为了方便上层应用区分：线程从await方法中苏醒究竟是因为中断（THROW_IE）还是因为被其他线程signal（REINTERRUPT）。
-
 | 标记    | 行为   |含义|  
 | --------   | :-----   | :-----   | 
 | THROW_IE       | await方法的最后抛出InterruptedException异常      |  线程苏醒是由中断引起的 |
 | REINTERRUPT| await方法的最后重置中断标志位   | 线程苏醒是由其他线程调用signal方法引起的|  
-
 再回到checkInterruptWhileWaiting方法，这个方法中处理判断要怎么处理中断以外，transferAfterCancelledWait调用还干了其他事情，代码如下：
 ```java
     final boolean transferAfterCancelledWait(Node node) {
