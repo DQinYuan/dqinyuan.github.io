@@ -3,7 +3,7 @@ layout: post
 title: Https协议原理总结
 date: 2018-01-24
 categories: java
-cover: https://img-blog.csdnimg.cn/20181212234503303.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMzMjU2Njg4,size_16,color_FFFFFF,t_70
+cover: /assets/img/https-principle.png
 tags: 网络
 ---
 
@@ -22,14 +22,14 @@ RSA算法的直观理解：
 　　所谓非对称加密就是有一对密钥，我们称之为公钥和私钥，公钥加密可以由私钥解密，私钥加密可以由公钥解密，并且由公钥推知私钥是不可计算的，反之亦然。这个是如何做到的呢？举个直观的例子：
 　　假如我有一个三位数"123"需要加密，加密密钥为"11"，之后进行"加密"操作，即将这两个数相乘，得到的加密后的值为"1353"，收到这个加密信息后，接收方要进行解密，解密密钥是"91"，进行"解密"操作，解密操作也是相乘，将"1353"乘"91"后得到"123123"，我们只要取其低三位就可以得到原文了。刚刚的操作是用"11"加密，"91"解密，如果你尝试一下会发现用"91"加密，"11"解密也是可行的，其实这一切都源于1001可以分解11和91这两个因子所导致。
 
-![RSA直观理解](https://img-blog.csdnimg.cn/20181212234351384.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMzMjU2Njg4,size_16,color_FFFFFF,t_70)
+![RSA直观理解](/assets/img/RSA-intuition.png)
 
 　　以上只是对RSA算法的直观理解，真正的RSA算法比这个要复杂，如果想要进一步了解这个算法以及它的证明的话，可以参考博客http://www.matrix67.com/blog/archives/5100
 　　一般公钥是公开的，私钥是自己要妥善保管的，这种加密算法出了可以用来进行加密通信外，还可以进行数字签名（即用私钥加密）来进行身份验证。
 
 # HTTPS工作原理示意图：
 
-![https工作流程图](https://img-blog.csdnimg.cn/20181212234503303.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMzMjU2Njg4,size_16,color_FFFFFF,t_70)
+![https工作流程图](/assets/img/https-principle.png)
 
 首先阐清图中几个概念：
  - 证书（certificate）：网站的证书包括网站的公钥，域名，过期时间以及其他相关信息；
@@ -42,7 +42,7 @@ RSA算法的直观理解：
  2. Web站点会请求CA机构给自己进行认证，CA机构对该站点进行考察之后同意认证，于是就用自己的私钥给该Web站点的证书进行签名（所谓签名就是用私钥加密）；
  3. 当用户请求Web站点时，Web站点会将它的证书发给用户浏览器，用户浏览器用CA的公钥尝试进行解密，如果能够正确解密的的话，则认可这个网站的安全性，否则的话就会展现出我们在Chrom浏览器中经常看见的"您的连接不是私密连接"页面，如下：
       
- ![https认证失败画面](https://img-blog.csdnimg.cn/2018121223454236.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMzMjU2Njg4,size_16,color_FFFFFF,t_70)
+ ![https认证失败画面](/assets/img/https-failure.png)
 
 # 一些细节补充：
 1.在用户浏览器确认了网站的安全性之后，通信过程的加密是如何进行的？在通信过程中使用的还是非对称加密吗？
@@ -51,7 +51,7 @@ RSA算法的直观理解：
 2.浏览器是如何确认证书是否与网站匹配的？
 　　答：浏览器在收到站点证书并且使用CA的公钥成功解密之后，会比对当前浏览器域名框中的域名与站点证书中"使用者可选名称"（如下图中的站点证书的可选名称就是*.csdn.net与csdn.net，其中\*是通配符）进行比对，如果域名在"使用者可选域名"中，则认证通过，否则依旧会认证失败。
 
-![使用者可选名称](https://img-blog.csdnimg.cn/20181213000611847.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMzMjU2Njg4,size_16,color_FFFFFF,t_70)
+![使用者可选名称](/assets/img/DNS-Name-Option.png)
 
 
 3.HTTPS的主要功能？
