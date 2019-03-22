@@ -26,7 +26,7 @@ Kubernetes和Docker的版本兼容性一直是令人头疼的问题，之前我�
 
 **1.查看docker版本**
 
-```shell
+```python
 docker -v
 ```
 
@@ -34,7 +34,7 @@ docker -v
 
 **2.如果发现版本不是1.13.0的话，建议将Docker卸载并且重新安装合适的版本**
 
-```shell
+```python
 # 删除已有的docker
 yum erase -y docker*
 # 删除已有的docker镜像(防止不同版本的docker无法兼容各自的镜像而产生服务无法启动的错误)
@@ -53,7 +53,7 @@ yum -y install docker-engine-1.13.0
 ```
 
 **3. 开启docker服务**
-```shell
+```python
 systemctl enable docker
 systemctl start docker
 ```
@@ -62,7 +62,7 @@ systemctl start docker
 
 kubeadm是一个可以方便我们部署kubernetes节点的工具。
 
-```shell
+```python
 # 添加安装kubeadm的yum源
 cat>> /etc/yum.repos.d/kubernetes.repo <<EOF
 [kubernetes]
@@ -78,7 +78,7 @@ yum install -y kubeadm
 在安装kubeadm的同时，系统还自动帮你安装了kubectl，kubelet和kubernetes-cni
 
 设置kubelet开机自启
-```shell
+```python
 systemctl enable kubelet.service
 ```
 
@@ -92,7 +92,7 @@ kubernetes在Worker节点上的基础系统，除了kubelet以外，其他都是
 
 在shell中执行如下代码：
 
-```shell
+```python
 images=(kube-proxy:v1.13.4 pause:3.1)
 for imageName in ${images[@]} ; do
 docker pull gcr.azk8s.cn/google-containers/$imageName
@@ -103,7 +103,7 @@ done
 
 # 步骤四  禁用swap分区
 
-```shell
+```python
 swapoff -a
 ```
 
@@ -113,7 +113,7 @@ swapoff -a
 
 (假设ip是`10.10.10.108.73`)
 
-```shell
+```python
 hostnamectl set-hostname "h73"
 ```
 
@@ -128,18 +128,18 @@ hostnamectl set-hostname "h73"
 
 其中有一列`EXPIRES`代表token过期的时间，找到一个还没过期的token然后执行以下命令：
 
-```shell
+```python
 kubeadm join Master节点的IP:6443 --token 找到的token --discovery-token-ca-cert-hash sha256:主节点启动时生成的sha256值
 ```
 
 如果所有token都过期了，可以使用如下命令创建一个：
-```shell
+```python
 kubeadm token create
 ```
 
 默认的token有效期是23h，也可以通过如下命令创建永久有效的token：
 
-```shell
+```python
 kubeadm token create --ttl 0
 ```
 
@@ -152,7 +152,7 @@ kubeadm token create --ttl 0
 
 有时候`join`命令打印出的信息并不详尽，可以使用如下的命令查看更加详尽的报错：
 
-```shell
+```python
 journalctl -xe
 ```
 
@@ -162,7 +162,7 @@ journalctl -xe
 
 需要根据自身集群的情况修改脚本部分内容
 
-```shell
+```python
 #!/bin/bash
 
 # 指定需要的docker版本
@@ -266,7 +266,7 @@ kubeadm join 10.10.108.73:6443 --token gdvgh1.bnlcjnlcet9l78zo \
 
 1.提供一份集群统一的`hosts`配置
 
-```shell
+```python
 echo "处理主机名和hosts"
 \cp -f ./unihosts /etc/hosts
 ```
@@ -275,7 +275,7 @@ echo "处理主机名和hosts"
 
 2.集群ip特征
 
-```shell
+```python
 # 获得ip的最后一段
 ip_seg=`ip a | grep -P "10.10.108.\d+" -o | awk -F '.' '{print $4}'`
 ```
@@ -284,7 +284,7 @@ ip_seg=`ip a | grep -P "10.10.108.\d+" -o | awk -F '.' '{print $4}'`
 
 3.join命令
 
-```shell
+```python
 kubeadm join 10.10.108.73:6443 --token gdvgh1.bnlcjnlcet9l78zo \
 --discovery-token-ca-cert-hash sha256:c6516103a534da7d660895080e90f8a77a5f8d74a417a685c0bcdcd748f82365
 ```
