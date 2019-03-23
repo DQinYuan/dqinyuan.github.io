@@ -10,15 +10,19 @@ cover: /assets/img/kubernetes/kubernete.jpg
 
 
 # 引言
+---
 
 
 Kubernetes的Worker节点的部署要比Master简单不少，核心的是一条join命令，步骤如下。
 
 操作系统是CentOS7，假设使用的用户是root（如果不是root的话，请自行添加"sudo"）
 
+如果你用的是Ubuntu系统，大多数操作也都类似，在结尾附录二中我还给出了Ubuntu安装过程中与CentOS7不同的地方，希望能对你有所帮助。
+
 
 
 # 步骤一 调节Docker版本
+---
 
 Kubernetes和Docker的版本兼容性一直是令人头疼的问题，之前我的服务器上装的docker是1.13.1版本，安装时会报很多莫名其妙的错误，让人困惑很久，经过测试Docker的1.13.0版本是能够和Kubernetes的v1.13.4版本完美配合的。
 
@@ -90,6 +94,7 @@ systemctl start docker
 ```
 
 # 步骤二 安装kubeadm
+---
 
 kubeadm是一个可以方便我们部署kubernetes节点的工具。
 
@@ -118,6 +123,7 @@ systemctl enable kubelet.service
 
 
 # 步骤三 拉取kubernetes的系统镜像
+---
 
 kubernetes在Worker节点上的基础系统，除了kubelet以外，其他都是通过容器部署的。本来这些镜像都可以在Worker启动时自动拉取的，但是因为国内墙的原因，我们事先在本地准备好（通过大佬在[github上建立的镜像](https://github.com/anjia0532/gcr.io_mirror)）。
 
@@ -133,12 +139,14 @@ done
 ```
 
 # 步骤四  禁用swap分区
+---
 
 ```python
 swapoff -a
 ```
 
 # 步骤五 修改主机名
+---
 
 集群内的主机名最好能有比较统一的格式，我没有在集群中配置DNS，所以采用的方案就是使用统一的`/etc/hosts`，集群中的主机ip是`10.10.108.xx`，于是就约定其主机名是`hxx`，我生成了一份这样的`hosts`文件，并且用脚本拷贝到了每一台机器上，同时使用下面的命令更改主机名：
 
@@ -150,6 +158,7 @@ hostnamectl set-hostname "h73"
 
 
 # 步骤六 加入集群
+---
 
 如果Master节点启动时产生的`join`命令还保存着的话，直接使用那条命令就可以了。
 
@@ -180,6 +189,7 @@ kubeadm token create --ttl 0
 
 
 # 附录1：如何排错
+---
 
 有时候`join`命令打印出的信息并不详尽，可以使用如下的命令查看更加详尽的报错：
 
@@ -187,9 +197,47 @@ kubeadm token create --ttl 0
 journalctl -xe
 ```
 
-# 附录2：部署脚本
+# 附录2：Ubuntu系统需要注意的地方
+---
 
-脚本默认使用root用户执行。
+如果部署的机器是Ubuntu系统，大部分步骤都差不多，区别比较大的地方只有两处：
+
+### 安装指定版本的Docker
+
+
+```python
+# 删除版本不对的docker
+apt-get remove docker docker-engine docker-ce docker.io
+# 添加含有老版本docker的源
+curl -fsSL https://apt.dockerproject.org/gpg | sudo apt-key add -
+apt-add-repository "deb https://apt.dockerproject.org/repo ubuntu-$(lsb_release -cs) main"
+apt-get update
+# 安装1.13.0版本Docker
+apt-get install docker-engine=1.13.0-0~ubuntu-xenial
+```
+
+### 安装kubeadm
+
+```
+# 添加含有kubeadm的源
+cat <<EOF > /etc/apt/sources.list.d/kubernetes.list
+deb http://mirrors.ustc.edu.cn/kubernetes/apt kubernetes-xenial main
+EOF
+
+# 安装kubeadm
+apt-get install kubeadm
+```
+
+
+
+
+
+# 附录3：部署脚本
+---
+
+脚本默认使用root用户执行。只适用于CentOS7
+
+
 
 需要根据自身集群的情况修改脚本部分内容
 
