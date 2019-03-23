@@ -48,6 +48,9 @@ gpgcheck=1
 enabled=1
 gpgkey=http://mirrors.aliyun.com/docker-engine/yum/gpg
 EOF
+
+# 清除缓存
+yum clean all
 # 安装docker 1.13.0
 yum -y install docker-engine-1.13.0
 ```
