@@ -52,6 +52,34 @@ EOF
 yum -y install docker-engine-1.13.0
 ```
 
+上面的安装命令在有的情况下可能还是会安装上新版本的docker，此时可以考虑下载rpm包自己手动进行安装：[下载地址](https://yum.dockerproject.org/repo/main/centos/7/Packages/)
+
+下载docker-engine-selinux-17.05.0.ce-1.el7.centos.noarch.rpm和docker-engine-1.13.0-1.el7.centos.x86_64.rpm这两个，然后上传到linux服务器上，使用如下命令装：
+
+先cd到你上传这两个rpm包所在的目录
+
+```python
+# 如果最近在update过，不运行这个也可以
+yum update -y
+# 先安装docker-engine-selinux
+rpm -ivh docker-engine-selinux-17.05.0.ce-1.el7.centos.noarch.rpm
+# 再安装docker-engine
+rpm -ivh docker-engine-1.13.0-1.el7.centos.x86_64.rpm
+```
+
+之后查看docker版本：
+
+```python
+docker -v
+```
+
+确认此时docker的版本已经是1.13.0：
+
+![确认docker版本](/assets/img/kubernetes/dockerversion.png)
+
+
+
+
 **3. 开启docker服务**
 ```python
 systemctl enable docker
