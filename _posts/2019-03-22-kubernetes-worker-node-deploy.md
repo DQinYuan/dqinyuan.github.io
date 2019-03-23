@@ -218,7 +218,7 @@ apt-get install docker-engine=1.13.0-0~ubuntu-xenial
 
 ### 安装kubeadm
 
-```
+```python
 # 添加含有kubeadm的源
 cat <<EOF > /etc/apt/sources.list.d/kubernetes.list
 deb http://mirrors.ustc.edu.cn/kubernetes/apt kubernetes-xenial main
