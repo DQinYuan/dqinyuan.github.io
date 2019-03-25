@@ -220,6 +220,10 @@ apt-get install docker-engine=1.13.0-0~ubuntu-xenial
 
 ```python
 # 添加含有kubeadm的源
+git clone  https://gitee.com/DQYuan_admin/kubernetes_gpg.git
+cd kubernetes_gpg
+cat apt-key.gpg | apt-key add -
+
 cat <<EOF > /etc/apt/sources.list.d/kubernetes.list
 deb http://mirrors.ustc.edu.cn/kubernetes/apt kubernetes-xenial main
 EOF
