@@ -1,28 +1,25 @@
 ---
 layout: post
-title: Kubernetes:v1.13.4的Worker节点墙内部署文档(CentOS7)
-date: 2019-03-22
+title: Kubernetes:v1.13.4墙内部署文档(CentOS7)
+date: 2019-03-25
 categories: kubernetes
 tags: kubernetes
 cover: /assets/img/kubernetes/kubernete.jpg
 ---
 
 
-
 # 引言
 ---
 
-
-Kubernetes的Worker节点的部署要比Master简单不少，核心的是一条join命令，步骤如下。
-
 操作系统是CentOS7，假设使用的用户是root（如果不是root的话，请自行添加"sudo"）
 
-如果你用的是Ubuntu系统，大多数操作也都类似，在结尾附录二中我还给出了Ubuntu安装过程中与CentOS7不同的地方，希望能对你有所帮助。
+如果你用的是Ubuntu系统，大多数操作也都类似，在结尾附录中我还给出了Ubuntu安装过程中与CentOS7不同的地方，希望能对你有所帮助。
 
 
-
-# 步骤一 调节Docker版本
+# Master节点部署
 ---
+
+## 步骤一 调节Docker版本
 
 Kubernetes和Docker的版本兼容性一直是令人头疼的问题，之前我的服务器上装的docker是1.13.1版本，安装时会报很多莫名其妙的错误，让人困惑很久，经过测试Docker的1.13.0版本是能够和Kubernetes的v1.13.4版本完美配合的。
 
@@ -93,8 +90,7 @@ systemctl enable docker
 systemctl start docker
 ```
 
-# 步骤二 安装kubeadm
----
+## 步骤二 安装kubeadm
 
 kubeadm是一个可以方便我们部署kubernetes节点的工具。
 
@@ -121,13 +117,192 @@ systemctl enable kubelet.service
 注意此时不要尝试通过`systemctl start`来启动`kubelet`，即使尝试了也不会成功，`kubelet`最终必须由kubeadm来负责启动。
 
 
-
-# 步骤三 拉取kubernetes的系统镜像
----
+## 步骤三 拉取kubernetes的系统镜像
 
 kubernetes在Worker节点上的基础系统，除了kubelet以外，其他都是通过容器部署的。本来这些镜像都可以在Worker启动时自动拉取的，但是因为国内墙的原因，我们事先在本地准备好（通过大佬在[github上建立的镜像](https://github.com/anjia0532/gcr.io_mirror)）。
 
 在shell中执行如下代码：
+
+```python
+images=(kube-proxy:v1.13.4 kube-scheduler:v1.13.4 kube-controller-manager:v1.13.4
+kube-apiserver:v1.13.4 etcd:3.2.24 coredns:1.2.6 pause:3.1 )
+for imageName in ${images[@]} ; do
+docker pull gcr.azk8s.cn/google-containers/$imageName
+docker tag gcr.azk8s.cn/google-containers/$imageName k8s.gcr.io/$imageName
+docker rmi gcr.azk8s.cn/google-containers/$imageName
+done
+```
+
+## 步骤四  禁用swap分区
+
+```python
+swapoff -a
+```
+
+## 步骤五 修改主机名
+
+集群内的主机名最好能有比较统一的格式，我没有在集群中配置DNS，所以采用的方案就是使用统一的`/etc/hosts`，集群中的主机ip是`10.10.108.xx`，于是就约定其主机名是`hxx`，我生成了一份这样的`hosts`文件，并且用脚本拷贝到了每一台机器上，同时使用下面的命令更改主机名：
+
+(假设ip是`10.10.10.108.73`)
+
+```python
+hostnamectl set-hostname "h73"
+```
+
+## 步骤六 编写kubeadm.yaml
+
+```python
+vi kubeadm.yaml
+```
+
+然后在文件中填写如下内容：
+
+```python
+apiVersion: kubeadm.k8s.io/v1beta1
+kind: InitConfiguration
+controllerManager:
+  horizontal-pod-autoscaler-use-rest-clients: "true"
+  horizontal-pod-autoscaler-sync-period: "10s"
+  node-monitor-grace-period: "10s"
+apiServer:
+  runtime-config: "api/all=true"
+kubernetesVersion: "v1.13.4"
+```
+
+
+## 步骤七 启动主节点
+
+```python
+kubeadm init --config kubeadm.yaml
+```
+
+该命令执行完毕后会打印出一条`kubeadm join`命令，将其记录下来，日后部署Worker节点时要用到。
+
+
+## 步骤八 配置kubectl与apiServer的认证
+
+```python
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+```
+
+检查健康状态：
+
+```python
+kubectl get cs
+```
+
+查看集群状况：
+
+```python
+kubectl get nodes
+```
+
+## 步骤九 部署网络插件Weave
+
+```python
+kubectl apply -f https://git.io/weave-kube-1.6
+```
+
+查看是否部署成功：
+
+```python
+kubectl get pods -n kube-system
+```
+
+## 步骤十 安装kubernetes-dashboard
+
+kubernetes-dashboard可以让我们通过图形界面方便地查看集群和容器的状态，最好也将其安装在主节点上。
+
+**1. 首先下载其配置文件**
+
+```python
+wget https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
+```
+
+如果服务器上下载不下来的话就先下载到自己电脑上传上服务器
+
+**2.修改配置文件**
+
+将刚刚下载的配置文件的最后一部分修改为如下(注释部分即为有修改的部分)：
+
+```python
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard
+  namespace: kube-system
+spec:
+  # 添加Service的type为NodePort
+  type: NodePort
+  ports:
+    - port: 443
+      targetPort: 8443
+      # 添加映射到虚拟机的端口,k8s只支持30000以上的端口
+      nodePort: 30001
+  selector:
+    k8s-app: kubernetes-dashboard
+```
+
+**3.拉取dashboard需要的镜像**
+
+因为这些镜像也都被墙了，所以只能手动从镜像拉取然后改名：
+
+```python
+images=(kubernetes-dashboard-amd64:v1.10.1)
+for imageName in ${images[@]} ; do
+docker pull gcr.azk8s.cn/google-containers/$imageName
+docker tag gcr.azk8s.cn/google-containers/$imageName k8s.gcr.io/$imageName
+docker rmi gcr.azk8s.cn/google-containers/$imageName
+done
+```
+
+
+**4. 创建Pod**
+
+```python
+kubectl apply -f   kubernetes-dashboard.yaml
+```
+
+**5.开启代理服务**
+
+kubernetes-dashboard的安全管理比较严，只能通过本地代理进行访问，所以需要在Master节点上开启代理：
+
+```python
+nohup  kubectl proxy --address='0.0.0.0'  --accept-hosts='^*$'  --disable-filter=true &
+```
+
+然后访问地址`https://<master-ip>:30001`就能看到页面了.
+
+页面会要求我们进行验证，我们可以先通过下面的命令在主节点上获取token：
+
+```python
+kubectl -n kube-system describe $(kubectl -n kube-system get secret -n kube-system -o name | grep namespace) | grep token
+```
+
+然后选择令牌的方式进行登录，将token填入下图位置：
+
+![kubernetes dashboard](/assets/img/kubernetes/dashboard.png)
+
+即可进入兼容的页面。
+
+## 步骤十一 部署存储插件
+
+```python
+kubectl apply -f https://raw.githubusercontent.com/rook/rook/master/cluster/examples/kubernetes/ceph/operator.yaml
+kubectl apply -f https://raw.githubusercontent.com/rook/rook/master/cluster/examples/kubernetes/ceph/cluster.yaml
+```
+
+# Worker节点的部署
+
+## 步骤一到二同Master节点
+
+## 步骤三 拉取镜像
+
+可以只拉取Worker节点需要的镜像，如下：
 
 ```python
 images=(kube-proxy:v1.13.4 pause:3.1)
@@ -138,27 +313,9 @@ docker rmi gcr.azk8s.cn/google-containers/$imageName
 done
 ```
 
-# 步骤四  禁用swap分区
----
+## 步骤四到五同Master节点
 
-```python
-swapoff -a
-```
-
-# 步骤五 修改主机名
----
-
-集群内的主机名最好能有比较统一的格式，我没有在集群中配置DNS，所以采用的方案就是使用统一的`/etc/hosts`，集群中的主机ip是`10.10.108.xx`，于是就约定其主机名是`hxx`，我生成了一份这样的`hosts`文件，并且用脚本拷贝到了每一台机器上，同时使用下面的命令更改主机名：
-
-(假设ip是`10.10.10.108.73`)
-
-```python
-hostnamectl set-hostname "h73"
-```
-
-
-# 步骤六 加入集群
----
+## 步骤六 加入集群
 
 如果Master节点启动时产生的`join`命令还保存着的话，直接使用那条命令就可以了。
 
@@ -188,10 +345,15 @@ kubeadm token create --ttl 0 --print-join-command
 执行完join命令如果没有报错就成功加入集群了，可以在主节点上通过`kubectl get nodes`查看是否有该主机。
 
 
+如果你是和你的伙伴共同配置的，我还单独写了一份[Worker节点部署文档](http://www.dqyuan.top/2019/03/22/kubernetes-worker-node-deploy.html)，可以给你们负责Worker节点部署的小伙伴参考。
+
+
+
+
 # 附录1：如何排错
 ---
 
-有时候`join`命令打印出的信息并不详尽，可以使用如下的命令查看更加详尽的报错：
+有时候`kubeadm`命令打印出的信息并不详尽，可以使用如下的命令查看更加详尽的报错：
 
 ```python
 journalctl -xe
@@ -245,140 +407,3 @@ apt-get install kubeadm
 
 
 
-# 附录3：部署脚本
----
-
-脚本默认使用root用户执行。只适用于CentOS7
-
-
-
-需要根据自身集群的情况修改脚本部分内容
-
-```python
-#!/bin/bash
-
-# 指定需要的docker版本
-docker_version=1.13.0
-
-# 如果k8s在该台机器上已启动
-kube_line_num=`ps -ef | grep kubelet | wc -l`
-
-if [[ $kube_line_num>1 ]]; then
-    echo "该台机器已经启动过k8s了,不必重复启动,脚本退出"
-    exit
-fi
-
-
-function docker_install() {
-    cat>> /etc/yum.repos.d/docker-main.repo <<EOF
-[docker-main]
-name=docker-main
-baseurl=http://mirrors.aliyun.com/docker-engine/yum/repo/main/centos/7/
-gpgcheck=1
-enabled=1
-gpgkey=http://mirrors.aliyun.com/docker-engine/yum/gpg
-EOF
-    yum erase -y docker*
-    rm -rf /var/lib/docker.old
-    rm -f /etc/yum.repos.d/docker.repo
-    mv -f /var/lib/docker /var/lib/docker.old
-    yum -y install docker-engine-1.13.0
-}
-
-# check if docker install
-function check_and_install()
-{
-    echo "检查Docker......"
-    docker -v
-    if [ $? -eq  0 ]; then
-        echo "检查到Docker已安装!"
-    else
-        echo "安装docker环境..."
-        docker_install
-        echo "安装docker环境...安装完成!"
-    fi
-
-    match=`docker -v | grep $docker_version`
-
-    if [[ -z $match ]];
-    then
-        echo "docker版本不对,需要的版本是 $docker_version ,正在重新安装"
-        docker_install
-    fi
-}
-
-check_and_install
-
-echo "关闭swap"
-swapoff -a
-
-cat>> /etc/sysctl.d/k8s.conf <<EOF
-net.bridge.bridge-nf-call-ip6tables = 1
-net.bridge.bridge-nf-call-iptables = 1
-vm.swappiness=0
-EOF
-
-sysctl --system
-
-echo "准备安装kubeadm"
-cat>> /etc/yum.repos.d/kubernetes.repo <<EOF
-[kubernetes]
-name=kubernetes
-baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
-gpgcheck=0
-enable=1
-EOF
-
-yum install -y kubeadm
-
-systemctl enable docker
-systemctl enable kubelet.service
-systemctl start docker
-
-echo "拉取镜像"
-images=(kube-proxy:v1.13.4 pause:3.1)
-for imageName in ${images[@]} ; do
-docker pull gcr.azk8s.cn/google-containers/$imageName
-docker tag gcr.azk8s.cn/google-containers/$imageName k8s.gcr.io/$imageName
-docker rmi gcr.azk8s.cn/google-containers/$imageName
-done
-
-echo "处理主机名和hosts"
-\cp -f ./unihosts /etc/hosts
-# 获得ip的最后一段
-ip_seg=`ip a | grep -P "10.10.108.\d+" -o | awk -F '.' '{print $4}'`
-hostnamectl set-hostname "h$ip_seg"
-
-echo "加入集群"
-kubeadm join 10.10.108.73:6443 --token gdvgh1.bnlcjnlcet9l78zo \
---discovery-token-ca-cert-hash sha256:c6516103a534da7d660895080e90f8a77a5f8d74a417a685c0bcdcd748f82365
-```
-
-**需要根据集群情况修改的地方有：**
-
-1.提供一份集群统一的`hosts`配置
-
-```python
-echo "处理主机名和hosts"
-\cp -f ./unihosts /etc/hosts
-```
-
-这里的`./unihosts`修改成你准备的统一的集群的主机名配置
-
-2.集群ip特征
-
-```python
-# 获得ip的最后一段
-ip_seg=`ip a | grep -P "10.10.108.\d+" -o | awk -F '.' '{print $4}'`
-```
-
-这里的 `10.10.108.\d+`要换成集群自己的ip模式
-
-3.join命令
-
-```python
-kubeadm join 10.10.108.73:6443 --token gdvgh1.bnlcjnlcet9l78zo \
---discovery-token-ca-cert-hash sha256:c6516103a534da7d660895080e90f8a77a5f8d74a417a685c0bcdcd748f82365
-```
-
-最后一行的`join`要替换成自己集群的`join`命令
