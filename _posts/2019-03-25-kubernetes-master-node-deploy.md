@@ -297,6 +297,7 @@ kubectl apply -f https://raw.githubusercontent.com/rook/rook/master/cluster/exam
 ```
 
 # Worker节点的部署
+---
 
 ## 步骤一到二同Master节点
 
