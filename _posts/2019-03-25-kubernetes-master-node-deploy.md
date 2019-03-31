@@ -401,6 +401,7 @@ deb http://mirrors.ustc.edu.cn/kubernetes/apt kubernetes-xenial main
 EOF
 
 # 安装kubeadm
+apt-get update
 apt-get install kubeadm
 ```
 
