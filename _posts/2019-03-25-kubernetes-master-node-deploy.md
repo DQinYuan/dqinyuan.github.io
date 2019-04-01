@@ -178,8 +178,11 @@ kubeadm init --config kubeadm.yaml
 
 该命令执行完毕后会打印出一条`kubeadm join`命令，将其记录下来，日后部署Worker节点时要用到。
 
-
 ## 步骤八 配置kubectl与apiServer的认证
+
+
+
+下面这几行命令也会在上面的`init`命令执行完，`join`命令打印之前打印出来的，读者照着自己服务器上打印出来的命令即可，下面的是我自己服务器上打印出的命令：
 
 ```python
 mkdir -p $HOME/.kube
@@ -218,7 +221,7 @@ kubernetes-dashboard可以让我们通过图形界面方便地查看集群和容
 **1. 首先下载其配置文件**
 
 ```python
-wget https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
+wget https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml
 ```
 
 如果服务器上下载不下来的话就先下载到自己电脑上传上服务器
