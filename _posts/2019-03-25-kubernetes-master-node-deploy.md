@@ -214,7 +214,14 @@ kubectl apply -f https://git.io/weave-kube-1.6
 kubectl get pods -n kube-system
 ```
 
-## 步骤十 安装kubernetes-dashboard
+## 步骤十 部署存储插件
+
+```python
+kubectl apply -f https://raw.githubusercontent.com/rook/rook/master/cluster/examples/kubernetes/ceph/operator.yaml
+kubectl apply -f https://raw.githubusercontent.com/rook/rook/master/cluster/examples/kubernetes/ceph/cluster.yaml
+```
+
+## 步骤十一 安装kubernetes-dashboard
 
 kubernetes-dashboard可以让我们通过图形界面方便地查看集群和容器的状态，最好也将其安装在主节点上。
 
@@ -290,14 +297,9 @@ kubectl -n kube-system describe $(kubectl -n kube-system get secret -n kube-syst
 
 ![kubernetes dashboard](/assets/img/kubernetes/dashboard.png)
 
-即可进入兼容的页面。
+即可进入页面。
 
-## 步骤十一 部署存储插件
 
-```python
-kubectl apply -f https://raw.githubusercontent.com/rook/rook/master/cluster/examples/kubernetes/ceph/operator.yaml
-kubectl apply -f https://raw.githubusercontent.com/rook/rook/master/cluster/examples/kubernetes/ceph/cluster.yaml
-```
 
 # Worker节点的部署
 ---
