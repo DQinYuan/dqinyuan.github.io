@@ -44,6 +44,7 @@ ubuntu机器
 然后将其移动到linux的PATH路径下：
 
 ```bash
+chmod a+x clustersh
 mv clustersh /usr/local/bin
 ```
 
