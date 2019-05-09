@@ -11,9 +11,15 @@ cover: /assets/img/tidb/db.jpg
 
 # TiDB分布式事务原理探究
 
+---
+
+
+
 
 
 ## 事务开启
+
+---
 
 
 
@@ -23,6 +29,8 @@ cover: /assets/img/tidb/db.jpg
 
 ## 事务写
 
+---
+
 
 
 txn.Set方法本质上将kv值写入了一个内存缓存(即kv/memdb_buffer.go中的memDbBuffer)中。该内存kv数据库利用的是golevel提供的功能。
@@ -31,6 +39,8 @@ txn.Set方法本质上将kv值写入了一个内存缓存(即kv/memdb_buffer.go�
 
 ## 事务回滚
 
+---
+
 
 
 直接将tikvTxn的valid字段置为false，之后如果用户再执行提交或者回滚操作，会检查valid，如果为false则直接返回错误。
@@ -38,6 +48,8 @@ txn.Set方法本质上将kv值写入了一个内存缓存(即kv/memdb_buffer.go�
 
 
 ## 事务提交
+
+---
 
 
 
