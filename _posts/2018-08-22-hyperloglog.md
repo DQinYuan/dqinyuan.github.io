@@ -3,7 +3,7 @@ layout: post
 title: 探索HyperLogLog算法（含Java实现）
 date: 2018-08-22
 categories: 原理探究
-cover: https://upload-images.jianshu.io/upload_images/10192684-9f3bbe9d8e36b991.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240
+cover: /assets/img/hyperloglog/throwcoin.jpg
 tags: hyperloglog java 大数据 stream-lib
 ---
 
@@ -21,17 +21,17 @@ HyperLogLog算法来源于论文《HyperLogLog the analysis of a near-optimal ca
 
 # 生活中的启发-以抛硬币为例
 ---
-![抛硬币](https://upload-images.jianshu.io/upload_images/10192684-9f3bbe9d8e36b991.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![抛硬币](/assets/img/hyperloglog/throwcoin.jpg)
 
 HyperLogLog本质上来源于生活中一个小的发现，假设你抛了很多次硬币，你告诉在这次抛硬币的过程中最多只有两次扔出连续的反面，让我猜你总共抛了多少次硬币，我敢打赌你抛硬币的总次数不会太多，相反，如果你和我说最多出现了100次连续的反面，那么我敢肯定扔硬盘的总次数非常的多，甚至我还可以给出一个估计，这个估计要怎么给呢？其实是一个很简单的概率问题，假设1代表抛出正面，0代表反面：
-![以序列1110100110为例](https://upload-images.jianshu.io/upload_images/10192684-e20686bd226e9724.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![以序列1110100110为例](/assets/img/hyperloglog/prob.png)
 
  上图中以抛硬币序列"1110100110"为例，其中最长的反面序列是"00"，我们顺手把后面那个1也给带上，也就是"001"，因为它包括了序列中最长的一串0，所以在序列中肯定只出现过一次，而它在任意序列出现出现且仅出现一次的概率显然是上图所示的三个二分之一相乘，也就是八分之一，所以我可以给出一个估计值，你大概总共抛了8次硬币。
 很显然，上面这种做法虽然能够估计抛硬币的总数，但是显然误差是比较大的，很容易受到突发事件（比如突然连续抛出好多0）的影响，HyperLogLog算法研究的就是如何减小这个误差。
 
 之前说过，HyperLogLog算法是用来计算基数的，这个抛硬币的序列和基数有什么关系呢？比如在数据库中，我只要在每次插入一条新的记录时，计算这条记录的hash，并且转换成二进制，就可以将其看成一个硬币序列了，如下(0b前缀表示二进制数)：
 
-![计算hash](https://upload-images.jianshu.io/upload_images/10192684-6134ac0cad91f2b5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![计算hash](/assets/img/hyperloglog/hash.png)
 
 # 最简单的想法
 ---
@@ -64,12 +64,12 @@ hash(ele1) = 00110111
 hash(ele2) = 10010001
 ```
 
-![分桶算法](https://upload-images.jianshu.io/upload_images/10192684-54f40bfe3918eb69.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![分桶算法](/assets/img/hyperloglog/bucket.png)
 
 到这里，你大概已经理解了LogLog算法的基本思想，LogLog算法是在HyperLogLog算法之前提出的一个基数估计算法，HyperLogLog算法其实就是LogLog算法的一个改进版。
 
 LogLog算法完整的基数计算公式如下：
-![LogLog算法](https://upload-images.jianshu.io/upload_images/10192684-8eac2cc8299e6fae.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![LogLog算法](/assets/img/hyperloglog/dvll.png)
 
 其中m代表分桶数，R头上一道横杠的记号就代表每个桶的结果（其实就是桶中数据的最长前导零+1）的均值，相比我之前举的简单的例子，LogLog算法还乘了一个常数constant进行修正，这个constant具体是多少等我讲到Java实现的时候再说。
 
@@ -77,19 +77,19 @@ LogLog算法完整的基数计算公式如下：
 ---
 前面的LogLog算法中我们是使用的是平均数来将每个桶的结果汇总起来，但是平均数有一个广为人知的缺点，就是容易受到大的数值的影响，一个常见的例子是，假如我的工资是1000元一个月，我老板的工资是100000元一个月，那么我和老板的平均工资就是(100000 + 1000)/2，即50500元，显然这离我的工资相差甚远，我肯定不服这个平均工资。
 用调和平均数就可以解决这一问题，调和平均数的结果会倾向于集合中比较小的数，x1到xn的调和平均数的公式如下：
-![调和平均数](https://upload-images.jianshu.io/upload_images/10192684-b9ce26b38d5a3c91.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![调和平均数](/assets/img/hyperloglog/harmean.png)
 
 再用这个公式算一下我和老板的平均工资：
-![使用调和平均数计算平均工资](https://upload-images.jianshu.io/upload_images/10192684-0b08f92289ea5140.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![使用调和平均数计算平均工资](/assets/img/hyperloglog/harmeanres.png)
 
 最后的结果是1980元，这和我的工资水平还比较接近，这样的平均工资水平我才比较信服。
 
 再回到前面的LogLog算法，从前面的举的例子可以看出，
 影响LogLog算法精度的一个重要因素就是，hash值的前导零的数量显然是有很大的偶然性的，经常会出现一两数据前导零的数目比较多的情况，所以HyperLogLog算法相比LogLog算法一个重要的改进就是使用调和平均数而不是平均数来聚合每个桶中的结果，HyperLogLog算法的公式如下：
-![HyperLogLog算法](https://upload-images.jianshu.io/upload_images/10192684-fc79923156cd9a9c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![HyperLogLog算法](/assets/img/hyperloglog/dvhll.png)
 
 其中constant常数和m的含义和之前的LogLog算法公式中的含义一致，Rj代表(第j个桶中的数据的最大前导零数目+1)，为了方便理解，我将公式再拆解一下：
-![HyperLogLog公式的理解](https://upload-images.jianshu.io/upload_images/10192684-8e5d4240f92a7193.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![HyperLogLog公式的理解](/assets/img/hyperloglog/dvhlleasy.png)
 
 其实从算术平均数改成调和平均数这个优化是很容易想到的，但是为什么LogLog算法没有直接使用调和平均数吗？网上看到一篇英文文章里说大概是因为使用算术平均数的话证明比较容易一些，毕竟科学家们出论文每一步都是要证明的，不像我们这里简单理解一下，猜一猜就可以了。
 
@@ -110,7 +110,7 @@ if DV < (5 / 2) * m:
 ---
 constant常数的选择与分桶的数目有关，具体的数学证明请看论文，这里就直接给出结论：
 假设：m为分桶数，p是m的以2为底的对数
-           ![p](https://upload-images.jianshu.io/upload_images/10192684-ba1a57d1c70e73ee.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+           ![p](/assets/img/hyperloglog/p.png)
 
 则按如下的规则计算constant
 ```java
@@ -131,7 +131,7 @@ switch (p) {
 如果理解了之前的分桶算法，那么很显然分桶数只能是2的整数次幂。
 如果分桶越多，那么估计的精度就会越高，统计学上用来衡量估计精度的一个指标是“相对标准误差”(relative standard deviation，简称RSD)，RSD的计算公式这里就不给出了，百科上一搜就可以知道，从直观上理解，RSD的值其实就是（(每次估计的值）在（估计均值）上下的波动）占（估计均值）的比例（这句话加那么多括号是为了方便大家断句）。RSD的值与分桶数m存在如下的计算关系：
 
-![RSD](https://upload-images.jianshu.io/upload_images/10192684-811cfb11aa8539b5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![RSD](/assets/img/hyperloglog/rsd.png)
 
 有了这个公式，你可以先确定你想要达到的RSD的值，然后再推出分桶的数目m。
 
