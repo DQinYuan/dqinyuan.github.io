@@ -197,6 +197,8 @@ Redis的所有HyperLogLog结构都是固定的16384个桶（2的14次方），�
 
 
 
+如果还想更详细地了解Redis中的实现细节的话，可以阅读我的另一篇博客[Redis源码走马观花（5）HyperLogLog](http://dqyuan.top/2019/11/20/redis-read-5.html)
+
 # HyperLogLog索引
 
 ---
