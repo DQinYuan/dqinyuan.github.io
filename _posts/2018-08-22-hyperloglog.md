@@ -58,6 +58,7 @@ HyperLogLog本质上来源于生活中一个小的发现，假设你抛了很多
 具体要怎么分桶呢？我们可以将每个元素的hash值的二进制表示的前几位用来指示数据属于哪个桶，然后把剩下的部分再按照之前最简单的想法处理。
 还是以刚刚的那个集合`{ele1,ele2}`为例，假设我要分2个桶，那么我只要去ele1的hash值的第一位来确定其分桶即可，之后用剩下的部分进行前导零的计算，如下图：
 假设ele1和ele2的hash值二进制表示如下：
+
 ```java
 hash(ele1) = 00110111
 hash(ele2) = 10010001
@@ -134,7 +135,100 @@ switch (p) {
 
 有了这个公式，你可以先确定你想要达到的RSD的值，然后再推出分桶的数目m。
 
+
+
+# 合并
+
+---
+
+
+
+假设有两个数据流，分别构建了两个HyperLogLog结构，称为a和b，他们的桶数是一样的，为n，现在要计算两个数据流总体的基数。
+
+```java
+数据流a："a" "b" "c" "d"  基数：4
+数据流b："b" "c" "d" "e"  基数：4
+两个数据流的总体基数：5
+```
+
+从前文我们可以知道，HyperLogLog算法在内存中的结构其实就是一个桶数组，需要先用下面的算法从a和我b的桶数组中构建出新的桶数组c，其实就是从a,b的对应位置取最大的：
+
+```java
+输入：桶数组a，b。它们的长度都是n
+输出：新的桶数组c
+算法：
+     c = c[n];
+     for (i=0; i<n; i++){
+         c[i]=max(a[i], b[i]);
+     }
+     return c;
+```
+
+
+
+之后用桶数组c代入前面的算法即可得到合并的总体基数。
+
+# Redis中的实现
+
+---
+
+
+
+Redis中和HyperLogLog相关的命令有三个：
+
+
+
+- `PFADD hll ele`：将ele添加进hll的基数计算中。流程：
+  - 先对ele求hash（使用的是一种叫做MurMurHash的算法）
+  - 将hash的低14位(因为总共有2的14次方个桶)作为桶的编号，选桶，记桶中当前的值为count
+  - 从的hash的第15位开始数0，假设从第15位开始有n个连续的0（即前导0）
+  - 如果n大于count，则把选中的桶的值置为n，否则不变
+- `PFCOUNT hll`：计算hll的基数。就是使用上面给出的`DV`公式根据桶中的数值，计算基数
+- `PFMERGE hll3 hll1 hll2`：将hll1和hll2合并成hll3。用的就是上面说的合并算法。
+
+
+
+Redis的所有HyperLogLog结构都是固定的16384个桶（2的14次方），并且有两种存储格式：
+
+
+
+- 稀疏格式：HyperLogLog算法在刚开始的时候，大多数桶其实都是0，稀疏格式通过存储连续的0的数目，而不是每个0存一遍，大大减小了HyperLogLog刚开始时需要占用的内存
+- 紧凑格式：用6个bit表示一个桶，需要占用12KB内存
+
+
+
+# HyperLogLog索引
+
+---
+
+之前在蚂蚁实习的时候，用的一个自研数据库号称支持HyperLogLog索引.（目前还不知道有什么开源的数据库支持这玩意，如果你知道，欢迎在评论里告诉我）。
+
+所谓HyperLogLog索引，比如你在`user`列上建立了一个hyperLogLog索引，那么当你使用如下的查询时：
+
+
+
+```sql
+SELECT COUNT(DISTINCT user) FROM users WHERE age >= 10 and city = "shanghai";
+```
+
+
+
+在计算`COUNT(DISTINCT)`时，会自动使用之前构建好的HyperLogLog索引来加速，据说能够获得数量级上的查询速度提升。
+
+
+
+如果仔细看了之前的算法，到这里可能会产生困惑，通过HyperLogLog似乎只能得到user的基数是多少，那又怎么能知道含有一定含有一定筛选条件（`WHERE age > 10 and city = "shanghai"`）的user基数是多少呢？
+
+
+
+其实再仔细想想，也很简单，通过前面介绍过的“合并”就可以完成，对每个不同的city都构建了一个关于`user`的HyperLogLog结构，因为age自己的基数比较，数据库可能是根据范围在每个范围构建了一个HyperLogLog结构，比如分别是0~10,10~20,20~30，这样只需要将涉及到的这三个HyperLogLog结构合并即可（三个分别是指city为"guangzhou"，age为10~20和age为20~30）。
+
+
+
+> 这个只是我的个人猜测，也可能不是这样。哪怕不保存任何索引，也只要将查出来的数据扫一遍即可，应该也比传统基于排序或者hash的distinct快不少。
+
 # Java实现分析
+
 ---
 stream-lib是一个开源的Java流式计算库，里面有很多大数据估值算法的实现，其中当然包括HyperLogLog算法，HyperLogLog实现类的代码地址如下：
 [https://github.com/addthis/stream-lib/blob/master/src/main/java/com/clearspring/analytics/stream/cardinality/HyperLogLog.java](https://github.com/addthis/stream-lib/blob/master/src/main/java/com/clearspring/analytics/stream/cardinality/HyperLogLog.java)
