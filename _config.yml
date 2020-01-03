@@ -1,6 +1,6 @@
 # Site settings 配置站点
 title: "DQinYuan's Blog"
-description: '兴趣使然的代码爱好者'
+description: '兴趣使然的coder'
 keyword: '杜沁园, 杜沁园的博客, Java, Go'
 url: '' # your host
 
@@ -21,7 +21,7 @@ footer:
 # Author 配置博主信息
 author: '杜沁园'
 nickname: '燃烧瓶'
-bio: '兴趣使然的代码爱好者'
+bio: '兴趣使然的coder'
 avatar: '/assets/img/profile.jpg'
 
 # Search
