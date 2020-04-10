@@ -4,7 +4,7 @@ title: 一眼看穿 Java 流与并行流
 date: 2020-03-21
 categories: java
 tags: java 并发
-cover: /assets/img/foods/biscuit.jpg
+cover: /assets/img/foods/biscuit.jpeg
 ---
 
 # 引言
