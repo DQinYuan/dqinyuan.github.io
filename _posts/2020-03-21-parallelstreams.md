@@ -461,6 +461,103 @@ Map<String, Optional<Person>> collect = persions.stream()
 
 ---
 
+在使用过程中你会发现 Java 流还是缺少很多方便操作的，比如“压缩”两个流，或者获取流中每个元素的索引等等，在 Guava 的 `Streams` 工具类中，补充了很多这样的方法：
+
+```java
+public class Pair {
+    int i;
+    int j;
+
+    public Pair(int i, int j) {
+        this.i = i;
+        this.j = j;
+    }
+
+    @Override
+    public String toString() {
+        return "Pair{" +
+                "i=" + i +
+                ", j=" + j +
+                '}';
+    }
+}
+
+// 利用 zip 讲两个整形流压缩成 Pair 流
+// Pair(1, 10)
+// Pair(2, 20)
+Stream<Integer> iStream = Stream.of(1,2);
+Stream<Integer> jStream = Stream.of(10, 20);
+Streams.zip(iStream, jStream, Pair::new).forEach(System.out::println);
+
+// 给流加上索引
+// a:0
+// b:1
+Streams.mapWithIndex(Stream.of("a", "b"),
+        (str, index) -> str + ":" + index).forEach(System.out::println);
+```
+
+如果你想自己定义一些流操作可以参考 `Streams` 里面这些方法的实现，如果你点开他们，会发现也没有什么神奇的。
+
+`zip` 就是先把两个流的 `iterator` 取出来，把这两个 `iterator` 合成一个 `Spliterator` 后，把 `Spliterator` 转换成 `Stream` 后返回：
+
+```java
+  public static <A, B, R> Stream<R> zip(
+      Stream<A> streamA, Stream<B> streamB, BiFunction<? super A, ? super B, R> function) {
+    //... 省略一些校验代码
+    // 先将两个流的 iterator 取出来
+    Iterator<A> itrA = Spliterators.iterator(splitrA);
+    Iterator<B> itrB = Spliterators.iterator(splitrB);
+    // 组成新 iterator，把新 iterator 转换成
+    return StreamSupport.stream(
+            new AbstractSpliterator<R>(
+                Math.min(splitrA.estimateSize(), splitrB.estimateSize()), characteristics) {
+              @Override
+              public boolean tryAdvance(Consumer<? super R> action) {
+                if (itrA.hasNext() && itrB.hasNext()) {
+                  action.accept(function.apply(itrA.next(), itrB.next()));
+                  return true;
+                }
+                return false;
+              }
+            },
+            isParallel)
+        .onClose(streamA::close)
+        .onClose(streamB::close);
+  }
+```
+
+而 `mapWithIndex` 大概就是先把流的 `iterator` 取出来后，组合一些逻辑成为 `Spliterator`，再转换成一个 `Stream` 返回：
+
+```java
+  public static <T, R> Stream<R> mapWithIndex(
+      Stream<T> stream, FunctionWithIndex<? super T, ? extends R> function) {
+      //...
+      Spliterator<T> fromSpliterator = stream.spliterator();
+      
+      Iterator<T> fromIterator = Spliterators.iterator(fromSpliterator);
+      return StreamSupport.stream(
+                new AbstractSpliterator<R>(
+                    fromSpliterator.estimateSize(),
+                    fromSpliterator.characteristics() & (Spliterator.ORDERED | Spliterator.SIZED)) {
+                  long index = 0;
+  
+                  @Override
+                  public boolean tryAdvance(Consumer<? super R> action) {
+                    if (fromIterator.hasNext()) {
+                      action.accept(function.apply(fromIterator.next(), index++));
+                      return true;
+                    }
+                    return false;
+                  }
+                },
+                isParallel)
+            .onClose(stream::close);
+      //...
+  }
+```
+
+# End
+---
 
 
 
