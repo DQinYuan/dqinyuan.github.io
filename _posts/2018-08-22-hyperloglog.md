@@ -223,11 +223,9 @@ SELECT COUNT(DISTINCT user) FROM users WHERE age >= 10 and city = "shanghai";
 
 
 
-其实再仔细想想，也很简单，通过前面介绍过的“合并”就可以完成，对每个不同的city都构建了一个关于`user`的HyperLogLog结构，因为age自己的基数比较，数据库可能是根据范围在每个范围构建了一个HyperLogLog结构，比如分别是0~10,10~20,20~30，这样只需要将涉及到的这三个HyperLogLog结构合并即可（三个分别是指city为"guangzhou"，age为10~20和age为20~30）。
+其实再仔细想想，也很简单，通过前面介绍过的“合并”就可以完成，对每个不同的city都构建了一个关于`user`的HyperLogLog结构，因为age的基数相对大一些，数据库可以根据范围在每个范围构建了一个HyperLogLog结构，比如分别是`0~10,10~20,20~30`，这样只需要将上面查询涉及到的三个HyperLogLog结构合并即可（三个分别是指city为"guangzhou"，age为`10~20`和age为`20~30`）。
 
-
-
-> 这个只是我的个人猜测，也可能不是这样。哪怕不保存任何索引，也只要将查出来的数据扫一遍即可，应该也比传统基于排序或者hash的distinct快不少。
+> 这个只是我的个人猜测，也可能不是这样。
 
 # Java实现分析
 
